@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P2P File Sharing</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .session-section {
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .session-code {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #007bff;
+            margin: 1rem 0;
+            padding: 0.5rem;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            display: inline-block;
+        }
+
+        .create-session-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s ease;
+        }
+
+        .create-session-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .join-session {
+            margin-top: 1rem;
+        }
+
+        .join-input {
+            padding: 0.5rem;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            margin-right: 0.5rem;
+        }
+
+        .join-btn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s ease;
+        }
+
+        .join-btn:hover {
+            background-color: #218838;
+        }
+
+        .error-message {
+            color: #dc3545;
+            margin-top: 0.5rem;
+        }
+
+        .connection-status {
+            padding: 0.5rem;
+            margin-bottom: 1rem;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .connected {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .peers-section {
+            margin-bottom: 2rem;
+        }
+
+        .peers-list {
+            list-style: none;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            padding: 1rem;
+            min-height: 100px;
+        }
+
+        .peer-item {
+            padding: 0.5rem;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .peer-item:last-child {
+            border-bottom: none;
+        }
+
+        .send-file-btn {
+            background-color: #17a2b8;
+            color: white;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .send-file-btn:hover {
+            background-color: #138496;
+        }
+
+        .file-upload {
+            border: 2px dashed #dee2e6;
+            border-radius: 5px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-upload:hover {
+            border-color: #007bff;
+            background-color: #f8f9fa;
+        }
+
+        .file-upload.dragover {
+            border-color: #28a745;
+            background-color: #e8f5e9;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: #6c757d;
+            margin-bottom: 1rem;
+        }
+
+        .upload-text {
+            color: #6c757d;
+            margin-bottom: 1rem;
+        }
+
+        .selected-files {
+            margin-top: 1rem;
+            list-style: none;
+        }
+
+        .selected-file {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem;
+            background-color: #f8f9fa;
+            border-radius: 3px;
+            margin-bottom: 0.5rem;
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex: 1;
+            min-width: 0;
+            padding-right: 1rem;
+        }
+
+        .file-name {
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .file-progress {
+            flex-grow: 1;
+            height: 4px;
+            background-color: #e9ecef;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: #007bff;
+            transition: width 0.3s ease;
+        }
+
+        .remove-file {
+            color: #dc3545;
+            cursor: pointer;
+            margin-left: 1rem;
+        }
+
+        .download-btn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-left: 1rem;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .download-btn:hover {
+            background-color: #218838;
+            text-decoration: none;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>P2P File Sharing</h1>
+        
+        <div class="session-section">
+            <button class="create-session-btn" id="createSessionBtn">Create New Session</button>
+            <div id="sessionCodeDisplay" class="session-code" style="display: none;"></div>
+            
+            <div class="join-session">
+                <input type="text" class="join-input" id="sessionCodeInput" placeholder="Enter session code">
+                <button class="join-btn" id="joinSessionBtn">Join Session</button>
+                <div id="errorMessage" class="error-message"></div>
+            </div>
+        </div>
+
+        <div id="connectionStatus" class="connection-status disconnected">
+            Not Connected
+        </div>
+        
+        <div class="peers-section">
+            <h2>Online Peers</h2>
+            <ul class="peers-list" id="peersList">
+                <!-- Peer items will be added here dynamically -->
+            </ul>
+        </div>
+
+        <div class="file-upload" id="dropZone">
+            <div class="upload-icon">📁</div>
+            <p class="upload-text">Drag and drop files here or click to select</p>
+            <input type="file" class="file-input" id="fileInput" multiple>
+        </div>
+
+        <ul class="selected-files" id="selectedFiles">
+            <!-- Selected files will be added here -->
+        </ul>
+
+        <div id="chatSection" style="margin-top:2rem;">
+            <h2>Group Chat</h2>
+            <div id="chatBox" style="height:200px;overflow:auto;border:1px solid #ccc;padding:10px;background:#fafafa;margin-bottom:10px;"></div>
+            <input type="text" id="chatInput" placeholder="Type a message..." style="width:70%;">
+            <button id="sendChatBtn">Send</button>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/simple-peer/9.11.1/simplepeer.min.js"></script>
+    <script src="/webrtc.js"></script>
+    <script>
+        const socket = io();
+        let p2pConnection = null;
+        let isTeacher = false;
+
+        // Add debugging for socket connection
+        socket.on('connect', () => {
+            console.log('Socket connected with ID:', socket.id);
+        });
+
+        socket.on('disconnect', () => {
+            console.log('Socket disconnected');
+        });
+
+        const createSessionBtn = document.getElementById('createSessionBtn');
+        const sessionCodeDisplay = document.getElementById('sessionCodeDisplay');
+        const sessionCodeInput = document.getElementById('sessionCodeInput');
+        const joinSessionBtn = document.getElementById('joinSessionBtn');
+        const errorMessage = document.getElementById('errorMessage');
+        const connectionStatus = document.getElementById('connectionStatus');
+        const peersList = document.getElementById('peersList');
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const selectedFiles = document.getElementById('selectedFiles');
+
+        // Initialize P2P connection with event handlers
+        function initializeP2P(isTeacherRole) {
+            console.log('Initializing P2P as:', isTeacherRole ? 'teacher' : 'student');
+            isTeacher = isTeacherRole;
+            p2pConnection = new P2PConnection(socket, isTeacher);
+
+            p2pConnection.onPeerConnected = () => {
+                console.log('Peer connection callback: Connected');
+                updateConnectionStatus('Connected', true);
+                updatePeersList(true);
+            };
+
+            p2pConnection.onPeerDisconnected = () => {
+                console.log('Peer connection callback: Disconnected');
+                updateConnectionStatus('Disconnected');
+                updatePeersList(false);
+            };
+
+            p2pConnection.onFileProgress = (fileId, progress) => {
+                const progressBar = document.querySelector(`[data-file-id="${fileId}"] .progress-bar`);
+                if (progressBar) {
+                    progressBar.style.width = `${progress}%`;
+                }
+            };
+
+            p2pConnection.onFileReceived = (fileId, fileName, blob) => {
+                console.log('File received callback:', fileName);
+                const fileItem = document.querySelector(`[data-file-id="${fileId}"]`);
+                
+                if (!fileItem) {
+                    // Create new file item if it doesn't exist
+                    const newFileItem = document.createElement('li');
+                    newFileItem.className = 'selected-file';
+                    newFileItem.dataset.fileId = fileId;
+
+                    const fileInfo = document.createElement('div');
+                    fileInfo.className = 'file-info';
+                    fileInfo.innerHTML = `
+                        <span>${fileName} (${formatFileSize(blob.size)})</span>
+                        <div class="file-progress">
+                            <div class="progress-bar" style="width: 100%"></div>
+                        </div>
+                    `;
+
+                    newFileItem.appendChild(fileInfo);
+                    selectedFiles.appendChild(newFileItem);
+                    console.log('Created new file item for:', fileName);
+                }
+
+                // Now get the file item (either existing or newly created)
+                const targetFileItem = fileItem || document.querySelector(`[data-file-id="${fileId}"]`);
+                if (targetFileItem) {
+                    const fileInfo = targetFileItem.querySelector('.file-info');
+                    if (fileInfo) {
+                        // Remove any existing download button
+                        const existingBtn = fileInfo.querySelector('.download-btn');
+                        if (existingBtn) {
+                            existingBtn.remove();
+                        }
+
+                        // Create and add the download button
+                        const downloadBtn = document.createElement('a');
+                        downloadBtn.href = URL.createObjectURL(blob);
+                        downloadBtn.download = fileName;
+                        downloadBtn.className = 'download-btn';
+                        downloadBtn.textContent = 'Download';
+                        downloadBtn.style.display = 'inline-block';
+                        
+                        // Clean up the object URL when the download starts
+                        downloadBtn.addEventListener('click', () => {
+                            setTimeout(() => {
+                                URL.revokeObjectURL(downloadBtn.href);
+                            }, 1000);
+                        });
+
+                        fileInfo.appendChild(downloadBtn);
+                        console.log('Added download button for:', fileName);
+                    } else {
+                        console.error('File info element not found in:', fileName);
+                    }
+                } else {
+                    console.error('File item not found for:', fileName);
+                }
+            };
+        }
+
+        // Handle session creation (teacher)
+        createSessionBtn.addEventListener('click', () => {
+            console.log('Creating new session as teacher');
+            initializeP2P(true);
+            socket.emit('createSession');
+        });
+
+        // Handle session code received
+        socket.on('sessionCreated', (sessionCode) => {
+            console.log('Session created with code:', sessionCode);
+            sessionCodeDisplay.textContent = sessionCode;
+            sessionCodeDisplay.style.display = 'block';
+            createSessionBtn.style.display = 'none';
+            document.querySelector('.join-session').style.display = 'none';
+            updateConnectionStatus('Waiting for students to join...');
+            currentSessionCode = sessionCode;
+            //socket.join(sessionCode);
+        });
+
+        // Handle session joining (student)
+        joinSessionBtn.addEventListener('click', () => {
+            const sessionCode = sessionCodeInput.value.trim().toUpperCase();
+            console.log('Attempting to join session:', sessionCode);
+            if (sessionCode.length === 5) {
+                initializeP2P(false);
+                socket.emit('joinSession', sessionCode);
+            } else {
+                errorMessage.textContent = 'Please enter a valid 5-character session code';
+            }
+        });
+
+     //   Handle session join success//
+        socket.on('sessionJoined', (sessionCode) => {
+            console.log('Successfully joined session:', sessionCode);
+            errorMessage.textContent = '';
+            sessionCodeDisplay.textContent = sessionCode;
+            sessionCodeDisplay.style.display = 'block';
+            document.querySelector('.join-session').style.display = 'none';
+            createSessionBtn.style.display = 'none';
+            updateConnectionStatus('Connecting to teacher...');
+            currentSessionCode = sessionCode;
+           // socket.join(sessionCode);
+        });
+
+        // Handle session errors
+        socket.on('sessionError', (message) => {
+            console.error('Session error:', message);
+            errorMessage.textContent = message;
+        });
+
+        // Handle session ended
+        socket.on('sessionEnded', () => {
+            console.log('Session ended');
+            updateConnectionStatus('Session ended', false);
+            p2pConnection?.destroy();
+        });
+
+        // Update peers list
+        function updatePeersList(connected) {
+            peersList.innerHTML = '';
+            
+            if (!connected) {
+                peersList.innerHTML = '<li class="peer-item">No peers online</li>';
+                return;
+            }
+
+            const peerItem = document.createElement('li');
+            peerItem.className = 'peer-item';
+            
+            if (isTeacher) {
+                peerItem.textContent = 'Student connected';
+            } else {
+                peerItem.textContent = 'Connected to teacher';
+            }
+
+            peersList.appendChild(peerItem);
+        }
+
+        // Update connection status
+        function updateConnectionStatus(message, isConnected = false) {
+            console.log('Connection status update:', message, isConnected);
+            connectionStatus.textContent = message;
+            connectionStatus.className = `connection-status ${isConnected ? 'connected' : 'disconnected'}`;
+        }
+
+        // Handle file selection and drag/drop
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        dropZone.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        // Handle selected files
+        function handleFiles(files) {
+            console.log('Handling files:', files.length, 'files');
+            for (const file of files) {
+                console.log('Processing file:', file.name, file.size);
+                const fileId = Math.random().toString(36).substring(2);
+                const fileItem = document.createElement('li');
+                fileItem.className = 'selected-file';
+                fileItem.dataset.fileId = fileId;
+
+                const fileInfo = document.createElement('div');
+                fileInfo.className = 'file-info';
+                fileInfo.innerHTML = `
+                    <span>${file.name} (${formatFileSize(file.size)})</span>
+                    <div class="file-progress">
+                        <div class="progress-bar" style="width: 0%"></div>
+                    </div>
+                `;
+
+                const removeBtn = document.createElement('span');
+                removeBtn.className = 'remove-file';
+                removeBtn.textContent = '×';
+                removeBtn.onclick = () => fileItem.remove();
+
+                fileItem.appendChild(fileInfo);
+                fileItem.appendChild(removeBtn);
+                selectedFiles.appendChild(fileItem);
+
+                // Send file if connected
+                if (p2pConnection && p2pConnection.peer && p2pConnection.peer.connected) {
+                    console.log('Starting file transfer for:', file.name);
+                    p2pConnection.sendFile(file).catch(error => {
+                        console.error('File transfer error:', error);
+                        const errorSpan = document.createElement('span');
+                        errorSpan.style.color = 'red';
+                        errorSpan.textContent = ' (Transfer failed)';
+                        fileInfo.querySelector('span').appendChild(errorSpan);
+                    });
+                } else {
+                    console.error('Cannot send file - peer not connected');
+                    const errorSpan = document.createElement('span');
+                    errorSpan.style.color = 'red';
+                    errorSpan.textContent = ' (Not connected)';
+                    fileInfo.querySelector('span').appendChild(errorSpan);
+                }
+            }
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Clean up on page unload
+        window.addEventListener('beforeunload', () => {
+            if (p2pConnection) {
+                p2pConnection.destroy();
+            }
+        });
+
+        // --- Group Chat Feature ---
+        const chatBox = document.getElementById('chatBox');
+        const chatInput = document.getElementById('chatInput');
+        const sendChatBtn = document.getElementById('sendChatBtn');
+        let currentSessionCode = null;
+
+        // Set session code when session is created or joined
+        socket.on('sessionCreated', (sessionCode) => {
+            currentSessionCode = sessionCode;
+        });
+        socket.on('sessionJoined', (sessionCode) => {
+            currentSessionCode = sessionCode;
+        });
+
+        // Send chat message
+        sendChatBtn.addEventListener('click', () => {
+            const message = chatInput.value.trim();
+            console.log('Attempting to send chat:', message, 'to session:', currentSessionCode);
+            if (message && currentSessionCode) {
+                socket.emit('chatMessage', {
+                    sessionCode: currentSessionCode,
+                    message,
+                    sender: socket.id
+                });
+                chatInput.value = '';
+            }
+        });
+
+        // Also send message on Enter key
+        chatInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') sendChatBtn.click();
+        }); 
+
+        // Receive chat message
+// Receive chat message
+socket.on('chatMessage', ({ message, sender }) => {
+    const isMe = sender === socket.id;
+    const senderLabel = isMe ? 'You' : 'Other';
+    chatBox.innerHTML += `<b>${senderLabel}:</b> ${message}<br>`;
+    chatBox.scrollTop = chatBox.scrollHeight;
+});
+    </script>
+</body>
+
+</html> 
