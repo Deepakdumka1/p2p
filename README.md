@@ -1,4 +1,4 @@
-# P2P
+<h1 align="center">P2P</h1>
 
 *Seamless, Secure Sharing Without Centralized Limits*
 
